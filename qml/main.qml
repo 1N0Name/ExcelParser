@@ -70,7 +70,7 @@ Window {
 
             CustomButton {
                 text: qsTr("Загрузить")
-                onClicked: sheetsModel.getColumnNames(sheetName.currentText)
+                onClicked: columnsModel.updateFromExcelSheet(fileDialog.selectedFile.toString().slice(8), sheetName.currentText)
             }
         }
 
@@ -100,11 +100,8 @@ Window {
             id: columnLayout
             spacing: 10
 
-            // ToDo: Написать плюсовую модель?
             Repeater {
-                model: ListModel {
-                    id: columnsListModel
-                }
+                model: columnsModel
                 delegate: rowLayoutDelegate
             }
 
@@ -123,7 +120,7 @@ Window {
                     }
 
                     ComboBox {
-                        model: ["Option 1", "Option 2", "Option 3"]
+                        model: ["Скопировать", "Проигнорировать", "Источник ключа", "источник списка"]
                     }
                 }
             }

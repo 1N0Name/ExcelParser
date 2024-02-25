@@ -4,6 +4,7 @@
 #include "lib/logger.h"
 #include "lib/appcore.h"
 #include "lib/model/bookheetsmodel.h"
+#include "lib/model/sheetcolumnsmodel.h"
 
 // Все, что делает эта демонстрационная программа - это выводит на экран содержимое первой ячейки Excel-файла
 
@@ -32,6 +33,8 @@ int main(int argc, char *argv[])
 
     QQmlApplicationEngine engine;
 
+    SheetColumnsModel columnsModel;
+    engine.rootContext()->setContextProperty("columnsModel", &columnsModel);
     BookSheetsModel sheetsModel;
     engine.rootContext()->setContextProperty("sheetsModel", &sheetsModel);
     Appcore appcore;
