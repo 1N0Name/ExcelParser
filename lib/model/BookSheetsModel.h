@@ -8,9 +8,10 @@ class BookSheetsModel : public QAbstractListModel
     Q_OBJECT
 
 public:
-    explicit BookSheetsModel(QObject *parent = nullptr);
+    explicit BookSheetsModel(QObject* parent = nullptr);
 
-    enum SheetRoles {
+    enum SheetRoles
+    {
         TextRole = Qt::UserRole + 1
     };
 
@@ -19,8 +20,8 @@ public:
     Q_INVOKABLE QString getListNames();
 
     QHash<int, QByteArray> roleNames() const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
 private:
     QStringList m_sheetNames;

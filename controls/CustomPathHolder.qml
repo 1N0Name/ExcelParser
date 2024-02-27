@@ -13,9 +13,7 @@ Item {
     signal browseClicked
 
     property string text: "Путь не задан"
-    property string imgSource
     property color color: enabled ? ColorThemes.main_color : "#E1E1E1"
-    property bool isFolderDialog: true
 
     Rectangle
     {
@@ -33,43 +31,36 @@ Item {
         Item
         {
             id: chooseButton
-            anchors.right: parent.right
-            anchors.top: parent.top
             width: 80
             height: parent.height
+            anchors.right: parent.right
+            anchors.top: parent.top
 
-            Rectangle
+            RoundRectangle
             {
                 radius: 12
+                radiusCorners: Qt.AlignRight | Qt.AlignTop | Qt.AlignBottom
                 anchors.fill: parent
                 color: mouseArea.containsMouse ? ColorThemes.main_color_hover : ColorThemes.main_color
 
-                Rectangle
-                {
-                    anchors.left: parent.left
-                    height: parent.height
-                    width: 10
-                    color: mouseArea.containsMouse ? ColorThemes.main_color_hover : ColorThemes.main_color
-                }
-
                 Text
                 {
+                    text: qsTr("Обзор")
+                    font.weight: Font.Medium
+                    font.pixelSize: 14
+                    color: root.enabled ? "white" : "#929292"
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.horizontalCenter: parent.horizontalCenter
-                    color: root.enabled ? "white" : "#929292"
-                    font.pixelSize: 16
-                    font.weight: Font.Medium
-                    text: qsTr("Обзор")
                 }
             }
 
             MouseArea
             {
                 id: mouseArea
-                hoverEnabled: true
                 anchors.fill: parent
-                onClicked: root.browseClicked()
+                hoverEnabled: true
                 cursorShape: Qt.PointingHandCursor
+                onClicked: root.browseClicked()
             }
         }
 
@@ -79,41 +70,41 @@ Item {
             anchors.left: borderRect.left
             anchors.right: chooseButton.left
             anchors.bottom: parent.bottom
-            height: parent.height
             width: parent.width
+            height: parent.height
+            contentWidth: textArea.width
+            contentHeight: textArea.height
             clip: true
             interactive: true
             flickableDirection: Flickable.HorizontalFlick
-            contentWidth: textArea.width
-            contentHeight: textArea.height
 
             TextArea
             {
+                id: textArea
+                readOnly: true
+                height: 40
+                topPadding: 10
+                selectByMouse: true
+                selectByKeyboard: true
+
+                font.pixelSize: 16
+                text: root.text
+                color: "#7a7a7a"
+
                 background: Item
                 {
                     implicitHeight: parent.height
                     implicitWidth: parent.height
                     visible: false
                 }
-
-                selectByMouse: true
-                selectByKeyboard: true
-                height: 40
-                id: textArea
-                readOnly: true
-                font.pixelSize: 16
-                text: root.text
-                color: "#7a7a7a"
-                topPadding: 10
             }
 
             ScrollBar.horizontal: ScrollBar
             {
-                policy: ScrollBar.AlwaysOn
                 size: flickable.width
                 height: 10
                 visible: flickable.contentWidth > flickable.width
-                position: flickable.position.x / (flickable.contentWidth - flickable.width)
+                policy: ScrollBar.AlwaysOn
             }
         }
     }

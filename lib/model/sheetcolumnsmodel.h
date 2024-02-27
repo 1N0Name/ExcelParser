@@ -3,23 +3,25 @@
 
 #include <QAbstractListModel>
 #include <QMap>
-#include <QStringList>
 #include <QSet>
+#include <QStringList>
 
 class SheetColumnsModel : public QAbstractListModel
 {
     Q_OBJECT
 
 public:
-    explicit SheetColumnsModel(QObject *parent = nullptr);
+    explicit SheetColumnsModel(QObject* parent = nullptr);
 
-    enum ColumnRoles {
+    enum ColumnRoles
+    {
         TextRole = Qt::UserRole + 1,
         ActionRole,
         CustomNameRole
     };
 
-    enum ActionType {
+    enum ActionType
+    {
         Copy = 0,
         Ignore,
         KeySource,
@@ -33,11 +35,12 @@ public:
     Q_INVOKABLE bool checkColumnNamesUniqueness() const;
 
     QHash<int, QByteArray> roleNames() const override;
-    int rowCount(const QModelIndex &parent = QModelIndex()) const override;
-    QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
+    int rowCount(const QModelIndex& parent = QModelIndex()) const override;
+    QVariant data(const QModelIndex& index, int role = Qt::DisplayRole) const override;
 
 private:
-    struct ColumnInfo {
+    struct ColumnInfo
+    {
         QString name;
         ActionType actionType = Ignore;
         QString customName;

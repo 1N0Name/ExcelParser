@@ -16,17 +16,26 @@ Button {
                                                 ? ColorThemes.main_color_hover : ColorThemes.main_color
 
     contentItem: Text {
+        id: contentText
         text: root.text
         color: textColor
+        font.weight: Font.Medium
+        font.pixelSize: 14
         horizontalAlignment: textAlignment
         verticalAlignment: Qt.AlignVCenter
         elide: Qt.ElideRight
     }
 
+    TextMetrics {
+        id: contentTextMetrics
+        font: contentText.font
+        text: contentText.text
+    }
+
     background: Rectangle {
         id: rootBG
         implicitHeight: root.height
-        implicitWidth: root.width + root.horizontalPadding * 2
+        implicitWidth: contentTextMetrics.width + root.horizontalPadding * 2
         color: root.buttonDynamicColor
         radius: 12
     }

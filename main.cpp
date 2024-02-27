@@ -1,44 +1,31 @@
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
+#include <QQmlContext>
 
-#include "lib/logger.h"
-#include "lib/appcore.h"
-#include "lib/model/bookheetsmodel.h"
-#include "lib/model/sheetcolumnsmodel.h"
-
-// Все, что делает эта демонстрационная программа - это выводит на экран содержимое первой ячейки Excel-файла
-
-// В main создается объект "главного" класса Appcore и запускается приложение.
-// В конструкторе Appcore загружается главное окно (файл Main.qml).
-// В Main.qml описан интерфейс главного окна и происходит вызов метода в Appcore для получения
-// значения первой ячейки файла doc.xlsx.
-
-// Для работы программы необходимо поместить файл doc.xlsx (есть в репозитории) в директорию билда
-// (build-ExcelMinimalApp-...)
+#include "lib/AppCore.h"
+#include "lib/Logger.hpp"
+#include "lib/model/BookSheetsModel.h"
+#include "lib/model/SheetColumnsModel.h"
 
 using namespace Qt::Literals::StringLiterals;
 
 // Точка входа в программу, как и обычно
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
-    QGuiApplication app(argc, argv); // Объект Qt-приложения с графическим интерфейсом
+    QGuiApplication app(argc, argv);
 
-    // Logger
-    Logger::setFile(u"ExcelParser.log"_s);
-    Logger::clearLogFile();
-    Logger::disableFilePrint();
-    Logger::disableFunctionPrint();
-    qInstallMessageHandler(Logger::write);
-
+    qInstallMessageHandler([](QtMsgType type, const QMessageLogContext& context, const QString& msg)
+        { Logger::instance().write(type, context, msg); });
     QQmlApplicationEngine engine;
+    qmlRegisterSingletonType<Logger>("com.sgu.logger", 1, 0, "Logger", [](QQmlEngine* engine, QJSEngine* scriptEngine) -> QObject*
+        { Q_UNUSED(engine) Q_UNUSED(scriptEngine) return &Logger::instance(); });
 
+    engine.rootContext()->setContextProperty("appcore", &AppCore::instance());
     SheetColumnsModel columnsModel;
     engine.rootContext()->setContextProperty("columnsModel", &columnsModel);
     BookSheetsModel sheetsModel;
     engine.rootContext()->setContextProperty("sheetsModel", &sheetsModel);
-    Appcore appcore;
-    engine.rootContext()->setContextProperty("appcore", &appcore);
 
     engine.addImportPath(":/");
 

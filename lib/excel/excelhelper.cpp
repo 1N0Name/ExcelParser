@@ -1,10 +1,9 @@
 #include <QString>
 #include <QVector>
 
-#include "excelhelper.h"
-#include "./../logger.h"
+#include "ExcelHelper.h"
 
-ExcelHelper::ExcelHelper(const QString &documentPath, const QString &sheetName)
+ExcelHelper::ExcelHelper(const QString& documentPath, const QString& sheetName)
     : m_documentPath(documentPath), m_doc(new QXlsx::Document(documentPath))
 {
     setWorkSheet(sheetName);
@@ -25,7 +24,8 @@ ExcelHelper::~ExcelHelper()
     return m_documentPath;
 }
 
-void ExcelHelper::setDocument(const QString &documentPath) {
+void ExcelHelper::setDocument(const QString& documentPath)
+{
     m_documentPath = documentPath;
     delete m_doc;
     m_doc = new QXlsx::Document(documentPath);
@@ -48,7 +48,7 @@ void ExcelHelper::setWorkSheet(const QString& sheetName)
     QStringList columnNames;
     for (auto i = 1; i < this->getColumnCount(); i++)
         columnNames.append(this->readCell(1, i));
-    LOGD("Column Names: " << columnNames.join(" "));
+    qDebug() << "Column Names: " << columnNames.join(" ");
     return columnNames;
 }
 
@@ -62,7 +62,8 @@ void ExcelHelper::setWorkSheet(const QString& sheetName)
     return docExists() ? m_doc->dimension().rowCount() : 0;
 }
 
-[[nodiscard]] int ExcelHelper::getColumnCount() const{
+[[nodiscard]] int ExcelHelper::getColumnCount() const
+{
 
     return docExists() ? m_doc->dimension().columnCount() : 0;
 }

@@ -26,6 +26,8 @@ ComboBox {
         contentItem: Text {
             text: modelData.text
             color: ColorThemes.white
+            font.weight: Font.Medium
+            font.pixelSize: 14
             elide: Text.ElideRight
             verticalAlignment: Text.AlignVCenter
         }
@@ -84,6 +86,8 @@ ComboBox {
             rightPadding: indicatorIcon.width + leftPadding +10
             verticalAlignment: Text.AlignVCenter
             text: root.displayText
+            font.weight: Font.Medium
+            font.pixelSize: 14
             elide: Text.ElideRight
             color: ColorThemes.white
         }

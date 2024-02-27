@@ -24,14 +24,18 @@ FetchContent_MakeAvailable(QXlsx)
 
 qt_standard_project_setup(REQUIRES 6.5)
 
+# Include all image references
+qt_add_resources(IMAGE_RESOURCES images.qrc)
+
 # Collect all the source files in the project and library
-file(GLOB HPP_SOURCES lib/excel/*.hpp)
+file(GLOB HPP_SOURCES lib/*.hpp lib/excel/*.hpp)
 file(GLOB H_SOURCES lib/*.h lib/model/*.h lib/excel/*.h)
 file(GLOB CPP_SOURCES lib/*.cpp lib/model/*.cpp lib/excel/*.cpp main.cpp)
 
 qt_add_executable(${EXECUTABLE_NAME}
     ${HPP_SOURCES}
     ${H_SOURCES}
+    ${IMAGE_RESOURCES}
     ${CPP_SOURCES}
 )
 

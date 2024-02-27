@@ -1,36 +1,37 @@
-#include "bookheetsmodel.h"
-#include "./../excel/excelhelper.h"
-#include "./../logger.h"
+#include "BookSheetsModel.h"
+#include "./../excel/ExcelHelper.h"
 
 #include <QQmlContext>
 
-BookSheetsModel::BookSheetsModel(QObject *parent)
+BookSheetsModel::BookSheetsModel(QObject* parent)
     : QAbstractListModel(parent)
-{}
+{
+}
 
-void BookSheetsModel::updateFromFile(QString docPath) {
+void BookSheetsModel::updateFromFile(QString docPath)
+{
     beginResetModel();
     ExcelHelper eh(docPath);
     m_sheetNames = eh.getBookSheetNames();
-    LOGD("Init: " << m_sheetNames.join(" "));
     endResetModel();
 }
 
-QString BookSheetsModel::getListNames() {
+QString BookSheetsModel::getListNames()
+{
     return m_sheetNames.join(" ");
 }
 
-int BookSheetsModel::rowCount(const QModelIndex &parent) const
+int BookSheetsModel::rowCount(const QModelIndex& parent) const
 {
     return m_sheetNames.length();
 }
 
-QVariant BookSheetsModel::data(const QModelIndex &index, int role) const
+QVariant BookSheetsModel::data(const QModelIndex& index, int role) const
 {
-    if(!checkIndex(index))
+    if (!checkIndex(index))
         return QVariant();
 
-    if(role == TextRole)
+    if (role == TextRole)
         return m_sheetNames[index.row()];
 
     return QVariant();
