@@ -14,6 +14,7 @@ Item {
     }
 
     ListView {
+        id: listView
         anchors.fill: parent
         model: logListModel
 
@@ -28,6 +29,7 @@ Item {
     Component.onCompleted: {
         Logger.messageLogged.connect(function(message) {
             logListModel.append({"log": message});
+            listView.positionViewAtIndex(logListModel.count - 1, ListView.Contain);
         });
     }
 }

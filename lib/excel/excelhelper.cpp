@@ -1,6 +1,7 @@
 #include <QString>
 #include <QVector>
 
+#include "../Logger.hpp"
 #include "ExcelHelper.h"
 
 ExcelHelper::ExcelHelper(const QString& documentPath, const QString& sheetName)
@@ -43,12 +44,57 @@ void ExcelHelper::setWorkSheet(const QString& sheetName)
     return docExists() ? m_doc->sheetNames() : QStringList();
 }
 
+void ExcelHelper::createNewSheet(const QString& sheetName, const QVector<ColumnInfo>& columns)
+{
+    m_doc->addSheet(sheetName);
+    setWorkSheet(sheetName);
+    setColumnHeaders(columns);
+}
+
+void ExcelHelper::setColumnHeaders(const QVector<ColumnInfo>& columns)
+{
+    if (!m_doc->selectSheet(m_doc->currentSheet()->sheetName()))
+        return;
+
+    QXlsx::Format headerFormat;
+    headerFormat.setFontBold(true);
+    headerFormat.setHorizontalAlignment(QXlsx::Format::AlignHCenter);
+
+    int columnIndex = 1;
+    for (const auto& column : columns) {
+        if (column.getActionType() != ColumnInfo::Ignore) {
+            qDebug() << ColumnInfo::actionTypeToString(column.getActionType()) << " | " << column.getCustomName();
+            // m_doc->write(1, columnIndex, column.getCustomName(), headerFormat);
+            // columnIndex++;
+        }
+    }
+}
+
+QString ExcelHelper::readColumnByName(const QString& columnName) const
+{
+    if (!docExists())
+        return QString();
+
+    QStringList columnNames = getSheetColumnNames();
+    int columnIndex         = columnNames.indexOf(columnName) + 1;
+    return readColumnByIndex(columnIndex);
+}
+
+QString ExcelHelper::readColumnByIndex(int index) const
+{
+    QString result;
+    int rowCount = getRowCount();
+    for (int i = 2; i <= rowCount; ++i) {
+        result += readCell(i, index) + "\n";
+    }
+    return result;
+}
+
 [[nodiscard]] QStringList ExcelHelper::getSheetColumnNames() const
 {
     QStringList columnNames;
     for (auto i = 1; i < this->getColumnCount(); i++)
         columnNames.append(this->readCell(1, i));
-    qDebug() << "Column Names: " << columnNames.join(" ");
     return columnNames;
 }
 

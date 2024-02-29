@@ -16,71 +16,105 @@ void SheetColumnsModel::updateFromExcelSheet(const QString& docPath, const QStri
     m_columns.clear();
 
     for (const auto& name : columnNames) {
-        ColumnInfo info;
-        info.name       = name;
-        info.customName = name;
+        ColumnInfo info(name);
         m_columns.append(info);
     }
 
     endResetModel();
 }
 
-bool SheetColumnsModel::setColumnAction(int index, ActionType action, const QString& customName)
+bool SheetColumnsModel::setColumnAction(int index, ColumnInfo::ActionType action, const QString& customName)
 {
-    // Проверка валидности индекса и предотвращение дублирования ключевого источника
-    if (index < 0 || index >= m_columns.size() || (action == KeySource && isKeySourceAlreadySet())) {
-        qDebug() << "Invalid index or KeySource already set. Index: " << index << ", Action: " << action;
+    if (index < 0 || index >= m_columns.size() || (action == ColumnInfo::KeySource && isKeySourceAlreadySet())) {
+        qDebug() << "Invalid index or KeySource already set. Index:" << index << ", Action:" << action;
         return false;
     }
 
-    if (!checkColumnNamesUniqueness()) {
-        qDebug() << "Custom name is not unique: " << customName;
-        return false;
-    }
-
-    // Обновление действия и пользовательского имени для указанной колонки
-    auto& column      = m_columns[index];
-    column.actionType = action;
-    // Если пользовательское имя не задано, используем существующее имя колонки
-    column.customName = customName.isEmpty() ? column.name : customName;
+    auto& column = m_columns[index];
+    column.setActionType(action);
+    column.setCustomName(customName);
 
     // Сообщаем о изменении данных в модели
     QModelIndex modelIndex = createIndex(index, 0);
     emit dataChanged(modelIndex, modelIndex, { ActionRole, CustomNameRole });
 
-    qDebug() << "Action set for Index: " << index << " Action: " << action << " CustomName: " << customName;
+    qDebug() << "Action set for Index:" << index << "Action:" << action << "CustomName:" << customName;
     return true;
 }
 
 bool SheetColumnsModel::isKeySourceAlreadySet() const
 {
-    for (const auto& column : m_columns) {
-        if (column.actionType == KeySource)
-            return true;
-    }
-    return false;
+    return std::any_of(m_columns.begin(), m_columns.end(), [](const auto& column)
+        { return column.getActionType() == ColumnInfo::KeySource; });
+}
+
+bool SheetColumnsModel::isListSourcePresent() const
+{
+    return std::any_of(m_columns.begin(), m_columns.end(), [](const auto& column)
+        { return column.getActionType() == ColumnInfo::ListSource; });
 }
 
 bool SheetColumnsModel::checkColumnNamesUniqueness() const
 {
-    QSet<QString> uniqueNames;
+    QMultiMap<QString, QString> customNameToColumnNames;
     for (const auto& column : m_columns) {
-        if (!column.customName.isEmpty()) {
-            if (uniqueNames.contains(column.customName)) {
-                return false;
-            }
-            uniqueNames.insert(column.customName);
-        }
+        customNameToColumnNames.insert(column.getCustomName(), column.getName());
     }
+
+    bool hasDuplicates = false;
+
+    auto i = customNameToColumnNames.begin();
+    while (i != customNameToColumnNames.end()) {
+        auto range = customNameToColumnNames.equal_range(i.key());
+        QStringList columnNames;
+        for (auto it = range.first; it != range.second; ++it) {
+            columnNames << it.value();
+        }
+        if (columnNames.size() > 1) {
+            hasDuplicates = true;
+            qWarning() << "Дубликаты выбранного имени:" << i.key() << "в колонках:" << columnNames.join(", ");
+        }
+        i = range.second;
+    }
+
+    return !hasDuplicates;
+}
+
+bool SheetColumnsModel::verifyColumns() const
+{
+    bool keySourceFound = std::any_of(m_columns.begin(), m_columns.end(), [](const auto& column)
+        { return column.getActionType() == ColumnInfo::KeySource; });
+
+    if (!keySourceFound) {
+        qWarning() << "Источник Ключа не найден.";
+        return false;
+    }
+
+    if (!checkColumnNamesUniqueness()) {
+        qWarning() << "Названия колонок не уникальны.";
+        return false;
+    }
+
+    if (!isListSourcePresent()) {
+        qWarning() << "Не найдено ни одного Источника Списка.";
+        return false;
+    }
+
+    qInfo() << "Все хорошо!";
     return true;
+}
+
+void SheetColumnsModel::setColumnHeaders()
+{
+    ExcelHelper eh;
+    eh.setColumnHeaders(m_columns);
 }
 
 QString SheetColumnsModel::getListNames()
 {
     QStringList names;
-    for (const auto& column : m_columns) {
-        names << column.name;
-    }
+    for (const auto& column : m_columns)
+        names << column.getName();
     return names.join(" ");
 }
 
@@ -97,9 +131,9 @@ QVariant SheetColumnsModel::data(const QModelIndex& index, int role) const
 
     const auto& column = m_columns[index.row()];
     switch (role) {
-        case TextRole: return column.name;
-        case ActionRole: return column.actionType;
-        case CustomNameRole: return column.customName.isEmpty() ? column.name : column.customName;
+        case TextRole: return column.getName();
+        case ActionRole: return column.getActionType();
+        case CustomNameRole: return column.getCustomName();
         default: return QVariant();
     }
 }

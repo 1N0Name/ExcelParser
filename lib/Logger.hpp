@@ -79,7 +79,7 @@ public:
 
         QString logLine;
         if (m_options & Timestamp) {
-            logLine += QDateTime::currentDateTime().toString("[dd hh:mm:ss] ");
+            logLine += QDateTime::currentDateTime().toString("[dd | hh:mm:ss] ");
         }
 
         if (m_options & Header) {
@@ -120,7 +120,7 @@ signals:
 
 private:
     explicit Logger(QObject* parent = nullptr)
-        : QObject(parent), m_logTarget(LOG_FILE), m_logLevels(LogLevel::Debug | LogLevel::Info | LogLevel::Warning | LogLevel::Critical | LogLevel::Fatal), m_options(Timestamp | Header | FunctionPrint)
+        : QObject(parent), m_logTarget(CONSOLE | LOG_FILE), m_logLevels(LogLevel::Debug | LogLevel::Info | LogLevel::Warning | LogLevel::Critical | LogLevel::Fatal), m_options(Timestamp | Header | FilePrint)
     {
         if (m_logTarget & LOG_FILE) {
             m_logFile.reset(new QFile(QCoreApplication::applicationDirPath() + "/log.txt"));

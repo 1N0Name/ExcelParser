@@ -36,6 +36,7 @@ Window {
     }
 
     ColumnLayout {
+        spacing: 10
         anchors.fill: parent
         anchors.margins: 10
 
@@ -43,8 +44,6 @@ Window {
             id: scrollView
             Layout.fillHeight: true
             Layout.fillWidth: true
-
-            ScrollBar.vertical: CustomScrollBar { id: vbar; }
 
             ColumnLayout {
                 width: Math.max(implicitWidth, scrollView.availableWidth)
@@ -142,7 +141,8 @@ Window {
 
                             ComboBox {
                                 id: actionComboBox
-                                property int previousIndex: 0
+                                property int previousIndex: 1
+                                currentIndex: previousIndex
                                 model: Object.keys(internal.actionTypes).map(key => internal.actionText(internal.actionTypes[key]))
 
                                 onActivated: {
@@ -163,16 +163,27 @@ Window {
                             TextField {
                                 id: columnNameField
                                 visible: [internal.actionTypes.keySource, internal.actionTypes.listSource].includes(actionComboBox.currentIndex)
-                                placeholderText: actionComboBox.currentIndex === internal.actionTypes.keySource ? "KWS_UFID" : "GROUP"
+                                placeholderText: actionComboBox.currentIndex === internal.actionTypes.keySource ? "KWS_UFID" :
+                                                    actionComboBox.currentIndex === internal.actionTypes.listSource ? "GROUP" : ""
                                 onTextChanged: {
                                     var name = text !== "" ? text : placeholderText;
                                     if (columnsModel.setColumnAction(columnDelegate.currentIndex, actionComboBox.currentIndex, name)) {
-                                        errorDialog.title = "Названия столбцов должны быть уникальны.";
+                                        errorDialog.title = qsTr("Названия столбцов должны быть уникальны.");
                                         errorDialog.open();
                                     }
                                 }
                                 Layout.preferredWidth: 150
                             }
+                        }
+                    }
+                }
+
+                CustomButton {
+                    text: qsTr("Проверить поля")
+                    onClicked: {
+                        if(!columnsModel.verifyColumns()) {
+                            errorDialog.title = "Ошибка. Проверьте ошибки в логе.";
+                            errorDialog.open();
                         }
                     }
                 }
@@ -217,9 +228,7 @@ Window {
 
                     CustomButton {
                         text: qsTr("Обработать")
-                        onClicked: {
-                            console.log("Процесс запущен...")
-                        }
+                        onClicked: columnsModel.setColumnHeaders();
                     }
                 }
             }
