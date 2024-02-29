@@ -8,32 +8,34 @@
 #include "../model/ColumnInfo.hpp"
 #include "XlCell.hpp"
 
-// Этот класс содержит в себе только методы для чтения, но не записи, их надо будет добавить, если нужно
 class ExcelHelper
 {
 public:
-    explicit ExcelHelper(const QString& documentPath = QString(), const QString& sheetName = QString());
+    explicit ExcelHelper();
+    ExcelHelper(const QString& documentPath);
+    ExcelHelper(const QString& documentPath, const QString& sheetName);
     ~ExcelHelper();
 
-    void setDocument(const QString& documentPath);
-    const QString& getDocumentPath() const;
-    void setWorkSheet(const QString& sheetName);
-    QStringList getBookSheetNames() const; // Получить список листов
-    QStringList getSheetColumnNames() const;
-    void createNewSheet(const QString& sheetName, const QVector<ColumnInfo>& columns);
-    void setColumnHeaders(const QVector<ColumnInfo>& columns);
-    QString readColumnByName(const QString& columnName) const;
-    QString readColumnByIndex(int index) const;
-    int getRowCount() const;
-    int getColumnCount() const;
-    QString readCell(int row, int col) const; // Считать ячейку
-    XlCell getCell(int row, int col) const;   // Получить ячейку (XlCell - тоже самописный вспомогательный класс)
+    // Методы для работы с документами и листами
+    bool saveDocument() const;
+    bool createOrLoadDocument(const QString& documentPath, const QString& sheetName = QString());
+    bool setWorkSheet(const QString& sheetName);
+    QStringList getBookSheetNames() const;
+    bool createNewSheet(const QString& sheetName);
+    [[nodiscard]] const QString& getDocumentPath() const;
+    [[nodiscard]] bool docExists() const;
 
-    bool docExists() const;
+    // Методы для работы с данными
+    bool setColumnHeader(const int index, const ColumnInfo::ActionType& type, const QString& name) const;
+    [[nodiscard]] QStringList getSheetColumnNames() const;
+    [[nodiscard]] QString readCell(int row, int col) const;
+    [[nodiscard]] XlCell getCell(int row, int col) const;
+    [[nodiscard]] int getRowCount() const;
+    [[nodiscard]] int getColumnCount() const;
 
 private:
+    std::unique_ptr<QXlsx::Document> m_doc;
     QString m_documentPath;
-    QXlsx::Document* m_doc;
 };
 
 #endif // !EXCELHELPER_H

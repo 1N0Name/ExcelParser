@@ -3,6 +3,7 @@
 #include <QQmlContext>
 
 #include "lib/AppCore.h"
+#include "lib/excel/ExcelParser.h"
 #include "lib/Logger.hpp"
 #include "lib/model/BookSheetsModel.h"
 #include "lib/model/SheetColumnsModel.h"
@@ -24,6 +25,8 @@ int main(int argc, char* argv[])
     engine.rootContext()->setContextProperty("appcore", &AppCore::instance());
     SheetColumnsModel columnsModel;
     engine.rootContext()->setContextProperty("columnsModel", &columnsModel);
+    ExcelParser excelParser(&columnsModel);
+    engine.rootContext()->setContextProperty("excelParser", &excelParser);
     BookSheetsModel sheetsModel;
     engine.rootContext()->setContextProperty("sheetsModel", &sheetsModel);
 

@@ -70,8 +70,8 @@ Window {
                 FileDialog {
                     id: fileDialog
                     nameFilters: ["Файлы Excel (*.xlsx)"]
+                    currentFolder: "file:///C:/Users/mainc/Downloads/Telegram Desktop"
                     fileMode: FileDialog.OpenFile
-                    currentFolder: StandardPaths.standardLocations(StandardPaths.DownloadLocation)[0]
                     onAccepted: {
                         const filename = selectedFile.toString().slice(8);
                         excelFilePathHolder.text = filename;
@@ -112,7 +112,7 @@ Window {
 
                 GridLayout {
                     id: sheetColumnsLayout
-                    columns: 2
+                    columns: 3
 
                     Dialog {
                         id: errorDialog
@@ -146,8 +146,7 @@ Window {
                                 model: Object.keys(internal.actionTypes).map(key => internal.actionText(internal.actionTypes[key]))
 
                                 onActivated: {
-                                    var newName = columnNameField.visible && columnNameField.text !== "" ? columnNameField.text : columnNameField.placeholderText;
-                                    if (!columnsModel.setColumnAction(columnDelegate.currentIndex, currentIndex, newName)) {
+                                    if (!columnsModel.setColumnAction(columnDelegate.currentIndex, currentIndex)) {
                                         if (currentIndex === internal.actionTypes.keySource) {
                                             currentIndex = previousIndex;
                                             errorDialog.title = qsTr("Источник ключа уже выбран. Выберите другой тип действия для этого столбца.");
@@ -159,37 +158,55 @@ Window {
                                 }
                                 Layout.preferredWidth: 150
                             }
-
-                            TextField {
-                                id: columnNameField
-                                visible: [internal.actionTypes.keySource, internal.actionTypes.listSource].includes(actionComboBox.currentIndex)
-                                placeholderText: actionComboBox.currentIndex === internal.actionTypes.keySource ? "KWS_UFID" :
-                                                    actionComboBox.currentIndex === internal.actionTypes.listSource ? "GROUP" : ""
-                                onTextChanged: {
-                                    var name = text !== "" ? text : placeholderText;
-                                    if (columnsModel.setColumnAction(columnDelegate.currentIndex, actionComboBox.currentIndex, name)) {
-                                        errorDialog.title = qsTr("Названия столбцов должны быть уникальны.");
-                                        errorDialog.open();
-                                    }
-                                }
-                                Layout.preferredWidth: 150
-                            }
-                        }
-                    }
-                }
-
-                CustomButton {
-                    text: qsTr("Проверить поля")
-                    onClicked: {
-                        if(!columnsModel.verifyColumns()) {
-                            errorDialog.title = "Ошибка. Проверьте ошибки в логе.";
-                            errorDialog.open();
                         }
                     }
                 }
 
                 Text {
-                    text: qsTr("4. Выберите результирующую директорию")
+                    text: qsTr("4. Выберите названия для результирующей колонки и колонки группировки")
+                    font.family: "Segoe UI"
+                    color: "#7a7a7a"
+                    font.bold: true
+                    font.pixelSize: 20
+                }
+
+                RowLayout {
+                    spacing: 10
+
+                    Text {
+                        text: qsTr("Группировка: ")
+                        font.family: "Segoe UI"
+                        color: "#7a7a7a"
+                        font.bold: true
+                        font.pixelSize: 16
+                    }
+
+                    TextField {
+                        id: groupFieldName
+                        placeholderText: "KWS_UFID"
+                        onTextChanged: columnsModel.setGroupingColumnName(text)
+                        Layout.preferredWidth: 100
+                    }
+
+                    Text {
+                        text: qsTr("Результирующая: ")
+                        font.family: "Segoe UI"
+                        color: "#7a7a7a"
+                        font.bold: true
+                        font.pixelSize: 16
+                    }
+
+                    TextField {
+                        id: keyFieldName
+                        placeholderText: "GROUP"
+                        onTextChanged: columnsModel.setKeyColumnName(text)
+                        Layout.preferredWidth: 100
+                    }
+                }
+
+
+                Text {
+                    text: qsTr("5. Выберите результирующую директорию")
                     font.family: "Segoe UI"
                     color: "#7a7a7a"
                     font.bold: true
@@ -208,7 +225,7 @@ Window {
 
                 FolderDialog {
                     id: folderDialog
-                    currentFolder: StandardPaths.standardLocations(StandardPaths.DownloadLocation)[0]
+                    currentFolder: "file:///C:/Users/mainc/Documents"
                     onAccepted: {
                         const filename = selectedFolder.toString().slice(8);
                         excelFolderPathHolder.text = filename;
@@ -219,7 +236,7 @@ Window {
                     spacing: 10
 
                     Text {
-                        text: qsTr("5. Начать парсинг")
+                        text: qsTr("6. Начать парсинг")
                         font.family: "Segoe UI"
                         color: "#7a7a7a"
                         font.bold: true
@@ -228,7 +245,15 @@ Window {
 
                     CustomButton {
                         text: qsTr("Обработать")
-                        onClicked: columnsModel.setColumnHeaders();
+                        onClicked: {
+                            if(!columnsModel.verifyColumns()) {
+                                errorDialog.title = "Ошибка. Проверьте ошибки в логе.";
+                                errorDialog.open();
+                            } else {
+                                excelParser.parse(fileDialog.selectedFile.toString().slice(8),
+                                                  folderDialog.selectedFolder.toString().slice(8));
+                            }
+                        }
                     }
                 }
             }

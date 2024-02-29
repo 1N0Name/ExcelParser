@@ -18,13 +18,12 @@ public:
 private:
     QString name;
     ActionType actionType;
-    QString customName;
 
 public:
     explicit ColumnInfo(QObject* parent = nullptr) {}
 
     explicit ColumnInfo(const QString& name, ActionType actionType = Ignore, const QString& customName = QString(), QObject* parent = nullptr)
-        : name(name), actionType(actionType), customName(name)
+        : name(name), actionType(actionType)
     {
     }
 
@@ -33,9 +32,6 @@ public:
 
     ActionType getActionType() const { return actionType; }
     void setActionType(ActionType newActionType) { actionType = newActionType; }
-
-    QString getCustomName() const { return customName.isEmpty() ? name : customName; }
-    void setCustomName(const QString& newCustomName) { customName = newCustomName; }
 
     static QString actionTypeToString(ActionType type)
     {

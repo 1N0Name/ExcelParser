@@ -32,11 +32,15 @@ file(GLOB HPP_SOURCES lib/*.hpp lib/excel/*.hpp)
 file(GLOB H_SOURCES lib/*.h lib/model/*.h lib/excel/*.h)
 file(GLOB CPP_SOURCES lib/*.cpp lib/model/*.cpp lib/excel/*.cpp main.cpp)
 
+# Set app icon
+set (WIN32_ICON ${CMAKE_CURRENT_SOURCE_DIR}/assets/ExcelParser.rc)
+
 qt_add_executable(${EXECUTABLE_NAME}
     ${HPP_SOURCES}
     ${H_SOURCES}
     ${IMAGE_RESOURCES}
     ${CPP_SOURCES}
+    # ${WIN32_ICON}
 )
 
 # Group all source files in the project

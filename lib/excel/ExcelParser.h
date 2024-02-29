@@ -2,67 +2,29 @@
 #define EXCELPARSER_H
 
 #include <QDebug>
+#include <QObject>
 #include <QRegularExpression>
 #include <QSet>
 #include <QVector>
 
-class ExcelParser
+#include "../model/SheetColumnsModel.h"
+
+class ExcelParser : public QObject
 {
+    Q_OBJECT
+
 public:
-    static QVector<int> parseListSource(const QString& input)
-    {
-        QVector<int> numbers;
-        QString cleanedInput = input.simplified().replace(" ", ""); // Удаление пробелов
+    explicit ExcelParser(SheetColumnsModel* model);
 
-        static QRegularExpression regex("(\\d+)(?:-(\\d+))?");
+    Q_INVOKABLE bool parse(const QString& filePath, const QString& folderPath);
 
-        auto matchIterator = regex.globalMatch(cleanedInput);
+    void setColumnsModel(SheetColumnsModel* model);
 
-        while (matchIterator.hasNext()) {
-            auto match     = matchIterator.next();
-            int start      = match.captured(1).toInt();
-            QString endStr = match.captured(2);
+private:
+    static QVector<int> parseListSource(const QString& input);
+    static bool parseKeySource(const QString& key, const QVector<int>& listSource, QSet<QString>& identifiers);
 
-            if (!endStr.isEmpty()) {
-                int end = endStr.toInt();
-                if (start > end || start > 9999 || end > 9999) {
-                    qWarning() << "Invalid range or number exceeds 9999 in input:" << start << "to" << end;
-                    return {};
-                }
-                for (int i = start; i <= end; ++i) {
-                    numbers.push_back(i);
-                }
-            } else {
-                if (start > 9999) {
-                    qWarning() << "Number exceeds 9999 in input:" << start;
-                    return {};
-                }
-                numbers.push_back(start);
-            }
-        }
-
-        return numbers;
-    }
-
-    static bool parseKeySource(const QString& key, const QVector<int>& listSource, QSet<QString>& identifiers)
-    {
-        // Проверка корректности ключа
-        if (key.length() != 11 || !key.toLongLong()) {
-            qWarning() << "Invalid key source:" << key;
-            return false;
-        }
-
-        for (int number : listSource) {
-            QString identifier = key + QString("%1").arg(number, 6, 10, QChar('0'));
-            if (identifier.length() != 17 || identifiers.contains(identifier)) {
-                qWarning() << "Duplicate or incorrect identifier:" << identifier;
-                return false;
-            }
-            identifiers.insert(identifier);
-        }
-
-        return true;
-    }
+    SheetColumnsModel* m_columnsModel = nullptr; // Не владеем объектом, только ссылка
 };
 
 #endif // EXCELPARSER_H

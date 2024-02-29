@@ -17,17 +17,19 @@ public:
     enum ColumnRoles
     {
         TextRole = Qt::UserRole + 1,
-        ActionRole,
-        CustomNameRole
+        ActionRole
     };
 
     /* ------------------------ Q_INVOKABLES ------------------------ */
     Q_INVOKABLE void updateFromExcelSheet(const QString& docPath, const QString& sheetName);
-    Q_INVOKABLE QString getListNames();
-
-    Q_INVOKABLE bool setColumnAction(int index, ColumnInfo::ActionType action, const QString& customName = QString());
+    Q_INVOKABLE bool setColumnAction(int index, ColumnInfo::ActionType action);
     Q_INVOKABLE bool verifyColumns() const;
-    Q_INVOKABLE void setColumnHeaders();
+    Q_INVOKABLE void setGroupingColumnName(const QString& name);
+    Q_INVOKABLE void setKeyColumnName(const QString& name);
+
+    const QVector<ColumnInfo>& getColumns() const;
+    QString getGroupingColumnName() const;
+    QString getKeyColumnName() const;
 
     QHash<int, QByteArray> roleNames() const override;
     int rowCount(const QModelIndex& parent = QModelIndex()) const override;
@@ -35,10 +37,11 @@ public:
 
 private:
     bool isListSourcePresent() const;
-    bool checkColumnNamesUniqueness() const;
     bool isKeySourceAlreadySet() const;
 
     QVector<ColumnInfo> m_columns;
+    QString m_keyColumnName      = "KWS_UFID";
+    QString m_groupingColumnName = "GROUP";
 };
 
 #endif // !SHEETCOLUMNSMODEL_H

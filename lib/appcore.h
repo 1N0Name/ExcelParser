@@ -4,6 +4,8 @@
 #include <QMutex>
 #include <QObject>
 
+#include "model/ColumnInfo.hpp"
+
 class AppCore : public QObject
 {
     Q_OBJECT
@@ -16,9 +18,6 @@ public:
         static AppCore instance;
         return instance;
     }
-
-    Q_INVOKABLE QString readFirstCell(QString docPath);
-    Q_INVOKABLE QStringList getColumnNames(const QString& docPath, const QString& sheetName);
 
 private:
     explicit AppCore(QObject* parent = nullptr);

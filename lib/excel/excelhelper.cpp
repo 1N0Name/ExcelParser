@@ -1,120 +1,141 @@
+#include <QDebug>
+#include <QFileInfo>
 #include <QString>
 #include <QVector>
 
 #include "../Logger.hpp"
 #include "ExcelHelper.h"
 
+ExcelHelper::ExcelHelper()
+    : m_doc(std::make_unique<QXlsx::Document>()) {}
+
+ExcelHelper::ExcelHelper(const QString& documentPath)
+    : ExcelHelper()
+{
+    createOrLoadDocument(documentPath);
+}
+
 ExcelHelper::ExcelHelper(const QString& documentPath, const QString& sheetName)
-    : m_documentPath(documentPath), m_doc(new QXlsx::Document(documentPath))
+    : ExcelHelper(documentPath)
 {
     setWorkSheet(sheetName);
 }
 
-ExcelHelper::~ExcelHelper()
-{
-    delete m_doc;
-}
+ExcelHelper::~ExcelHelper() {};
 
-[[nodiscard]] bool ExcelHelper::docExists() const
+bool ExcelHelper::createOrLoadDocument(const QString& documentPath, const QString& sheetName)
 {
-    return m_doc && !m_documentPath.isEmpty() && m_doc->load();
-}
+    if (documentPath.isEmpty())
+        return false;
 
-[[nodiscard]] const QString& ExcelHelper::getDocumentPath() const
-{
-    return m_documentPath;
-}
-
-void ExcelHelper::setDocument(const QString& documentPath)
-{
     m_documentPath = documentPath;
-    delete m_doc;
-    m_doc = new QXlsx::Document(documentPath);
+    m_doc          = std::make_unique<QXlsx::Document>(documentPath);
+
+    if (!m_doc->load() && !sheetName.isEmpty()) {
+        m_doc->addSheet(sheetName);
+    }
+    // qInfo() << "Открываю документ: " << m_documentPath;
+
+    return saveDocument();
 }
 
-void ExcelHelper::setWorkSheet(const QString& sheetName)
+bool ExcelHelper::setWorkSheet(const QString& sheetName)
 {
-    if (sheetName.isEmpty())
-        return;
-    m_doc->selectSheet(sheetName);
+    if (!m_doc->selectSheet(sheetName)) {
+        qWarning() << "Лист" << sheetName << "не существует. Лист будет создан.";
+        if (createNewSheet(sheetName))
+            return saveDocument();
+        return false;
+    }
+    return true;
 }
 
-[[nodiscard]] QStringList ExcelHelper::getBookSheetNames() const
+QStringList ExcelHelper::getBookSheetNames() const
 {
-    return docExists() ? m_doc->sheetNames() : QStringList();
+    return m_doc ? m_doc->sheetNames() : QStringList();
 }
 
-void ExcelHelper::createNewSheet(const QString& sheetName, const QVector<ColumnInfo>& columns)
+bool ExcelHelper::createNewSheet(const QString& sheetName)
 {
-    m_doc->addSheet(sheetName);
-    setWorkSheet(sheetName);
-    setColumnHeaders(columns);
+    if (m_doc->addSheet(sheetName)) {
+        m_doc->selectSheet(sheetName);
+        return saveDocument();
+    }
+    qWarning() << "Ошибка при создании нового листа:" << sheetName;
+    return false;
 }
 
-void ExcelHelper::setColumnHeaders(const QVector<ColumnInfo>& columns)
+bool ExcelHelper::setColumnHeader(const int index, const ColumnInfo::ActionType& type, const QString& name) const
 {
-    if (!m_doc->selectSheet(m_doc->currentSheet()->sheetName()))
-        return;
+    if (!m_doc->selectSheet(m_doc->currentSheet()->sheetName())) {
+        qWarning() << "Ошибка при выборе текущего листа.";
+        return false;
+    }
 
     QXlsx::Format headerFormat;
     headerFormat.setFontBold(true);
     headerFormat.setHorizontalAlignment(QXlsx::Format::AlignHCenter);
-
-    int columnIndex = 1;
-    for (const auto& column : columns) {
-        if (column.getActionType() != ColumnInfo::Ignore) {
-            qDebug() << ColumnInfo::actionTypeToString(column.getActionType()) << " | " << column.getCustomName();
-            // m_doc->write(1, columnIndex, column.getCustomName(), headerFormat);
-            // columnIndex++;
-        }
+    switch (type) {
+        case ColumnInfo::Copy:
+            headerFormat.setPatternBackgroundColor(QColor("#ccc0da"));
+            break;
+        case ColumnInfo::KeySource:
+            headerFormat.setPatternBackgroundColor(QColor("#c0504d"));
+            break;
+        case ColumnInfo::ListSource:
+            headerFormat.setPatternBackgroundColor(QColor("#fabf8f"));
+            break;
+        default:
+            break;
     }
+
+    m_doc->write(1, index, name, headerFormat);
+    return saveDocument();
 }
 
-QString ExcelHelper::readColumnByName(const QString& columnName) const
-{
-    if (!docExists())
-        return QString();
-
-    QStringList columnNames = getSheetColumnNames();
-    int columnIndex         = columnNames.indexOf(columnName) + 1;
-    return readColumnByIndex(columnIndex);
-}
-
-QString ExcelHelper::readColumnByIndex(int index) const
-{
-    QString result;
-    int rowCount = getRowCount();
-    for (int i = 2; i <= rowCount; ++i) {
-        result += readCell(i, index) + "\n";
-    }
-    return result;
-}
-
-[[nodiscard]] QStringList ExcelHelper::getSheetColumnNames() const
+QStringList ExcelHelper::getSheetColumnNames() const
 {
     QStringList columnNames;
-    for (auto i = 1; i < this->getColumnCount(); i++)
-        columnNames.append(this->readCell(1, i));
+    for (int col = 1; col <= getColumnCount(); ++col)
+        columnNames.append(readCell(1, col));
     return columnNames;
 }
 
 [[nodiscard]] QString ExcelHelper::readCell(int row, int col) const
 {
-    return docExists() ? m_doc->read(row, col).toString() : QString();
+    return m_doc->read(row, col).toString();
 }
 
 [[nodiscard]] int ExcelHelper::getRowCount() const
 {
-    return docExists() ? m_doc->dimension().rowCount() : 0;
+    return m_doc->dimension().rowCount();
 }
 
 [[nodiscard]] int ExcelHelper::getColumnCount() const
 {
-
-    return docExists() ? m_doc->dimension().columnCount() : 0;
+    return m_doc->dimension().columnCount();
 }
 
 [[nodiscard]] XlCell ExcelHelper::getCell(int row, int col) const
 {
-    return docExists() ? XlCell(row, col, m_doc->read(row, col)) : XlCell();
+    return XlCell(row, col, m_doc->read(row, col));
+}
+
+const QString& ExcelHelper::getDocumentPath() const
+{
+    return m_documentPath;
+}
+
+bool ExcelHelper::docExists() const
+{
+    return !m_documentPath.isEmpty() && QFileInfo::exists(m_documentPath);
+}
+
+bool ExcelHelper::saveDocument() const
+{
+    if (m_documentPath.isEmpty()) {
+        qWarning() << "Document path is empty. Cannot save document.";
+        return false;
+    }
+    return m_doc->saveAs(m_documentPath);
 }

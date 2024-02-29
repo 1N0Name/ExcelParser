@@ -120,7 +120,7 @@ signals:
 
 private:
     explicit Logger(QObject* parent = nullptr)
-        : QObject(parent), m_logTarget(CONSOLE | LOG_FILE), m_logLevels(LogLevel::Debug | LogLevel::Info | LogLevel::Warning | LogLevel::Critical | LogLevel::Fatal), m_options(Timestamp | Header | FilePrint)
+        : QObject(parent), m_logTarget(CONSOLE | LOG_FILE), m_logLevels(LogLevel::Info | LogLevel::Warning | LogLevel::Critical | LogLevel::Fatal), m_options(Timestamp | Header)
     {
         if (m_logTarget & LOG_FILE) {
             m_logFile.reset(new QFile(QCoreApplication::applicationDirPath() + "/log.txt"));
