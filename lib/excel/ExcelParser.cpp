@@ -1,7 +1,13 @@
 #include <QFileInfo>
+#include <stdexcept>
 
 #include "ExcelHelper.h"
 #include "ExcelParser.h"
+
+struct ParseError : public std::runtime_error
+{
+    using std::runtime_error::runtime_error;
+};
 
 ExcelParser::ExcelParser(SheetColumnsModel* model)
     : m_columnsModel(model) {}
@@ -31,7 +37,60 @@ bool ExcelParser::parse(const QString& filePath, const QString& folderPath)
     target.setColumnHeader(columnIndex++, ColumnInfo::ListSource, m_columnsModel->getGroupingColumnName());
     target.setColumnHeader(columnIndex, ColumnInfo::KeySource, m_columnsModel->getKeyColumnName());
 
-    return true;
+    int rowCount  = source.getRowCount();
+    int targetRow = 2; // Поскольку первая строка используется для заголовков
+
+    // Проход по всем строкам исходного документа
+    for (int row = 2; row <= rowCount; ++row) {
+        QString keySourceValue;
+        QVector<QString> copyValues;
+        copyValues.reserve(filteredColumns.size());
+
+        // Сбор значений из Copy и KeySource колонок
+        std::for_each(filteredColumns.cbegin(), filteredColumns.cend(), [&](const auto& column)
+            {
+            QString value = source.readCell(row, column.getIndex());
+            if (column.getActionType() == ColumnInfo::Copy) {
+                copyValues.push_back(value);
+            } else if (column.getActionType() == ColumnInfo::KeySource) {
+                keySourceValue = value;
+            } });
+
+        // Обработка колонок ListSource
+        std::for_each(filteredColumns.cbegin(), filteredColumns.cend(), [&](const auto& column)
+            {
+            if (column.getActionType() == ColumnInfo::ListSource) {
+                try {
+                    QString listSourceValue = source.readCell(row, column.getIndex());
+                    auto numbers = parseListSource(listSourceValue);
+                    QSet<QString> identifiers;
+
+                    if (!keySourceValue.isEmpty()) {
+                        if (!parseKeySource(keySourceValue, numbers, identifiers))
+                            return;
+
+                        for (const auto number : numbers) {
+                            int colIndex = 1;
+                            for (const auto& copyValue : copyValues) {
+                                target.writeCell(targetRow, colIndex++, copyValue);
+                            }
+                            target.writeCell(targetRow, colIndex++, column.getName());
+                            QString identifier = keySourceValue + QString::number(number).rightJustified(6, '0');
+                            target.writeCell(targetRow, colIndex, identifier);
+                            ++targetRow;
+                        }
+                    } else {
+                        throw ParseError("Ключ пустой");
+                    }
+                } catch (const ParseError& e) {
+                    qWarning() << "Невалидное знач. в строке " << row << " колонка " << column.getName() << ". " << e.what();
+                }
+            } });
+    }
+    qInfo() << "Обработка файла завершена!";
+    emit fileParsed(fullPath);
+
+    return target.saveDocument();
 }
 
 void ExcelParser::setColumnsModel(SheetColumnsModel* model)
@@ -55,18 +114,13 @@ QVector<int> ExcelParser::parseListSource(const QString& input)
 
         if (!endStr.isEmpty()) {
             int end = endStr.toInt();
-            if (start > end || start > 9999 || end > 9999) {
-                qWarning() << "Invalid range or number exceeds 9999 in input:" << start << "to" << end;
-                return {};
-            }
-            for (int i = start; i <= end; ++i) {
+            if (start > end || start > 9999 || end > 9999)
+                throw ParseError(QString("Недопустимый диапазон или число превышает 9999: от %1 до %2").arg(start).arg(end).toStdString());
+            for (int i = start; i <= end; ++i)
                 numbers.push_back(i);
-            }
         } else {
-            if (start > 9999) {
-                qWarning() << "Number exceeds 9999 in input:" << start;
-                return {};
-            }
+            if (start > 9999)
+                throw ParseError(QString("Число превышает 9999: %1").arg(start).toStdString());
             numbers.push_back(start);
         }
     }
@@ -76,18 +130,13 @@ QVector<int> ExcelParser::parseListSource(const QString& input)
 
 bool ExcelParser::parseKeySource(const QString& key, const QVector<int>& listSource, QSet<QString>& identifiers)
 {
-    // Проверка корректности ключа
-    if (key.length() != 11 || !key.toLongLong()) {
-        qWarning() << "Invalid key source:" << key;
-        return false;
-    }
+    if (key.length() != 11 || key.toLongLong() == 0)
+        throw ParseError(QString("Неверная длина ключа или некорректное значение: %1").arg(key).toStdString());
 
     for (int number : listSource) {
         QString identifier = key + QString("%1").arg(number, 6, 10, QChar('0'));
-        if (identifier.length() != 17 || identifiers.contains(identifier)) {
-            qWarning() << "Duplicate or incorrect identifier:" << identifier;
-            return false;
-        }
+        if (identifiers.contains(identifier))
+            throw ParseError(QString("Обнаружен дубликат идентификатора: %1").arg(identifier).toStdString());
         identifiers.insert(identifier);
     }
 

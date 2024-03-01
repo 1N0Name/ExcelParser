@@ -1,3 +1,4 @@
+#include <QDateTime>
 #include <QGuiApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -10,7 +11,6 @@
 
 using namespace Qt::Literals::StringLiterals;
 
-// Точка входа в программу, как и обычно
 int main(int argc, char* argv[])
 {
     QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
@@ -18,6 +18,7 @@ int main(int argc, char* argv[])
 
     qInstallMessageHandler([](QtMsgType type, const QMessageLogContext& context, const QString& msg)
         { Logger::instance().write(type, context, msg); });
+
     QQmlApplicationEngine engine;
     qmlRegisterSingletonType<Logger>("com.sgu.logger", 1, 0, "Logger", [](QQmlEngine* engine, QJSEngine* scriptEngine) -> QObject*
         { Q_UNUSED(engine) Q_UNUSED(scriptEngine) return &Logger::instance(); });
@@ -33,6 +34,7 @@ int main(int argc, char* argv[])
     engine.addImportPath(":/");
 
     app.setApplicationName("ExcelParser");
+    app.setApplicationVersion("0.1.0");
 
     const QUrl url(u"qml/main.qml"_s);
     QObject::connect(
@@ -43,6 +45,15 @@ int main(int argc, char* argv[])
                 QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     engine.load(url);
+
+    qInfo().noquote() << "=============================== Новый запуск ===============================";
+    qInfo().noquote() << "Время запуска: " + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
+    qInfo().noquote() << "Имя: " << QCoreApplication::applicationName();
+    qInfo().noquote() << "Версия приложения: " << QCoreApplication::applicationVersion();
+    qInfo().noquote() << "ОС: " << QSysInfo::prettyProductName();
+    qInfo().noquote() << "Архитектура ОС: " << QSysInfo::currentCpuArchitecture();
+    qInfo().noquote() << "Версия ОС: " << QSysInfo::kernelVersion();
+    qInfo().noquote() << "========================================================================";
 
     return app.exec();
 }

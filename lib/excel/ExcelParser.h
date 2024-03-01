@@ -20,6 +20,9 @@ public:
 
     void setColumnsModel(SheetColumnsModel* model);
 
+signals:
+    void fileParsed(const QString& filePath);
+
 private:
     static QVector<int> parseListSource(const QString& input);
     static bool parseKeySource(const QString& key, const QVector<int>& listSource, QSet<QString>& identifiers);

@@ -79,7 +79,7 @@ public:
 
         QString logLine;
         if (m_options & Timestamp) {
-            logLine += QDateTime::currentDateTime().toString("[dd | hh:mm:ss] ");
+            logLine += QDateTime::currentDateTime().toString("[dd-MM | hh:mm:ss] ");
         }
 
         if (m_options & Header) {

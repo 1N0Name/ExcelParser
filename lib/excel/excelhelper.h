@@ -29,6 +29,7 @@ public:
     bool setColumnHeader(const int index, const ColumnInfo::ActionType& type, const QString& name) const;
     [[nodiscard]] QStringList getSheetColumnNames() const;
     [[nodiscard]] QString readCell(int row, int col) const;
+    bool writeCell(int row, int col, const QString& value);
     [[nodiscard]] XlCell getCell(int row, int col) const;
     [[nodiscard]] int getRowCount() const;
     [[nodiscard]] int getColumnCount() const;

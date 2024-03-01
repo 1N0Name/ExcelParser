@@ -7,6 +7,7 @@ import QtQuick.Dialogs
 import Qt.labs.qmlmodels
 
 import Controls 0.1
+import Themes 0.1
 
 Window {
     width: 1000
@@ -70,7 +71,7 @@ Window {
                 FileDialog {
                     id: fileDialog
                     nameFilters: ["Файлы Excel (*.xlsx)"]
-                    currentFolder: "file:///C:/Users/mainc/Downloads/Telegram Desktop"
+                    currentFolder: StandardPaths.writableLocation(StandardPaths.DownloadLocation)
                     fileMode: FileDialog.OpenFile
                     onAccepted: {
                         const filename = selectedFile.toString().slice(8);
@@ -94,11 +95,7 @@ Window {
                         id: sheetName
                         placeholderText: qsTr("Выберите лист")
                         model: sheetsModel
-                    }
-
-                    CustomButton {
-                        text: qsTr("Загрузить")
-                        onClicked: columnsModel.updateFromExcelSheet(fileDialog.selectedFile.toString().slice(8), sheetName.currentText)
+                        onActivated: columnsModel.updateFromExcelSheet(fileDialog.selectedFile.toString().slice(8), sheetName.currentText)
                     }
                 }
 
@@ -113,6 +110,7 @@ Window {
                 GridLayout {
                     id: sheetColumnsLayout
                     columns: 3
+                    uniformCellWidths: true
 
                     Dialog {
                         id: errorDialog
@@ -183,7 +181,7 @@ Window {
 
                     TextField {
                         id: groupFieldName
-                        placeholderText: "KWS_UFID"
+                        placeholderText: "GROUP"
                         onTextChanged: columnsModel.setGroupingColumnName(text)
                         Layout.preferredWidth: 100
                     }
@@ -198,7 +196,7 @@ Window {
 
                     TextField {
                         id: keyFieldName
-                        placeholderText: "GROUP"
+                        placeholderText: "KWS_UFID"
                         onTextChanged: columnsModel.setKeyColumnName(text)
                         Layout.preferredWidth: 100
                     }
@@ -225,7 +223,7 @@ Window {
 
                 FolderDialog {
                     id: folderDialog
-                    currentFolder: "file:///C:/Users/mainc/Documents"
+                    currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
                     onAccepted: {
                         const filename = selectedFolder.toString().slice(8);
                         excelFolderPathHolder.text = filename;
@@ -252,6 +250,33 @@ Window {
                             } else {
                                 excelParser.parse(fileDialog.selectedFile.toString().slice(8),
                                                   folderDialog.selectedFolder.toString().slice(8));
+                            }
+                        }
+                    }
+
+                    Text {
+                        id: openFileText
+                        enabled: false
+                        text: enabled? "Открыть файл с результатом" : "Кнопка открытия доступна после завершения обработки"
+                        color: enabled? ColorThemes.main_color : "#777777"
+                        font.underline: true
+
+                        property string filePath: ""
+
+                        MouseArea {
+                            anchors.fill: parent
+                            enabled: true
+                            cursorShape: Qt.PointingHandCursor
+
+                            onClicked: {
+                                appcore.openFile(openFileText.filePath)
+                            }
+
+                            Component.onCompleted: {
+                                excelParser.fileParsed.connect(function(path) {
+                                    openFileText.filePath = path;
+                                    openFileText.enabled = true;
+                                });
                             }
                         }
                     }

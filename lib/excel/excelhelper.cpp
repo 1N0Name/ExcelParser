@@ -106,6 +106,14 @@ QStringList ExcelHelper::getSheetColumnNames() const
     return m_doc->read(row, col).toString();
 }
 
+bool ExcelHelper::writeCell(int row, int col, const QString& value)
+{
+    if (m_doc && row > 0 && col > 0) {
+        return m_doc->write(row, col, value);
+    }
+    return false;
+}
+
 [[nodiscard]] int ExcelHelper::getRowCount() const
 {
     return m_doc->dimension().rowCount();

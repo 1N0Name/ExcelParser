@@ -16,10 +16,9 @@ void SheetColumnsModel::updateFromExcelSheet(const QString& docPath, const QStri
     auto columnNames = eh.getSheetColumnNames();
     m_columns.clear();
 
-    for (const auto& name : columnNames) {
-        ColumnInfo info(name);
-        m_columns.append(info);
-    }
+    int index = 0;
+    for (const auto& name : columnNames)
+        m_columns.append(ColumnInfo(name, ColumnInfo::Ignore, ++index));
 
     endResetModel();
 }

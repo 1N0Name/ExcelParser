@@ -19,6 +19,8 @@ public:
         return instance;
     }
 
+    Q_INVOKABLE void openFile(const QString& path);
+
 private:
     explicit AppCore(QObject* parent = nullptr);
     AppCore(const AppCore&)            = delete;
