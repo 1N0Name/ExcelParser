@@ -1,4 +1,5 @@
 #include <QFileInfo>
+#include <QtConcurrent>
 #include <stdexcept>
 
 #include "ExcelHelper.h"
@@ -12,7 +13,13 @@ struct ParseError : public std::runtime_error
 ExcelParser::ExcelParser(SheetColumnsModel* model)
     : m_columnsModel(model) {}
 
-bool ExcelParser::parse(const QString& filePath, const QString& folderPath)
+void ExcelParser::parseAsync(const QString& filePath, const QString& folderPath)
+{
+    QFuture<void> future = QtConcurrent::run([this, filePath, folderPath]()
+        { this->processExcelFile(filePath, folderPath); });
+}
+
+bool ExcelParser::processExcelFile(const QString& filePath, const QString& folderPath)
 {
     ExcelHelper source(filePath);
 
@@ -87,6 +94,7 @@ bool ExcelParser::parse(const QString& filePath, const QString& folderPath)
                 }
             } });
     }
+    target.autoSizeCoumns();
     qInfo() << "Обработка файла завершена!";
     emit fileParsed(fullPath);
 

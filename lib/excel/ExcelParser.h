@@ -16,14 +16,14 @@ class ExcelParser : public QObject
 public:
     explicit ExcelParser(SheetColumnsModel* model);
 
-    Q_INVOKABLE bool parse(const QString& filePath, const QString& folderPath);
-
+    Q_INVOKABLE void parseAsync(const QString& filePath, const QString& folderPath);
     void setColumnsModel(SheetColumnsModel* model);
 
 signals:
     void fileParsed(const QString& filePath);
 
 private:
+    bool processExcelFile(const QString& filePath, const QString& folderPath);
     static QVector<int> parseListSource(const QString& input);
     static bool parseKeySource(const QString& key, const QVector<int>& listSource, QSet<QString>& identifiers);
 

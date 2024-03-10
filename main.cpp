@@ -18,6 +18,14 @@ int main(int argc, char* argv[])
 
     qInstallMessageHandler([](QtMsgType type, const QMessageLogContext& context, const QString& msg)
         { Logger::instance().write(type, context, msg); });
+    qInfo().noquote() << "=============================== Новый запуск ===============================";
+    qInfo().noquote() << "Время запуска: " + QDateTime::currentDateTime().toString("dd-MM-yyyy HH:mm:ss");
+    qInfo().noquote() << "Имя: " << QCoreApplication::applicationName();
+    qInfo().noquote() << "Версия приложения: " << QCoreApplication::applicationVersion();
+    qInfo().noquote() << "ОС: " << QSysInfo::prettyProductName();
+    qInfo().noquote() << "Архитектура ОС: " << QSysInfo::currentCpuArchitecture();
+    qInfo().noquote() << "Версия ОС: " << QSysInfo::kernelVersion();
+    qInfo().noquote() << "============================================================================";
 
     QQmlApplicationEngine engine;
     qmlRegisterSingletonType<Logger>("com.sgu.logger", 1, 0, "Logger", [](QQmlEngine* engine, QJSEngine* scriptEngine) -> QObject*
@@ -45,15 +53,6 @@ int main(int argc, char* argv[])
                 QCoreApplication::exit(-1); },
         Qt::QueuedConnection);
     engine.load(url);
-
-    qInfo().noquote() << "=============================== Новый запуск ===============================";
-    qInfo().noquote() << "Время запуска: " + QDateTime::currentDateTime().toString("yyyy-MM-dd HH:mm:ss");
-    qInfo().noquote() << "Имя: " << QCoreApplication::applicationName();
-    qInfo().noquote() << "Версия приложения: " << QCoreApplication::applicationVersion();
-    qInfo().noquote() << "ОС: " << QSysInfo::prettyProductName();
-    qInfo().noquote() << "Архитектура ОС: " << QSysInfo::currentCpuArchitecture();
-    qInfo().noquote() << "Версия ОС: " << QSysInfo::kernelVersion();
-    qInfo().noquote() << "========================================================================";
 
     return app.exec();
 }

@@ -1,5 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file alias="down_arrow.svg">assets/images/icons/down_arrow.svg</file>
+        <file alias="check.svg">assets/images/icons/check.svg</file>
     </qresource>
 </RCC>

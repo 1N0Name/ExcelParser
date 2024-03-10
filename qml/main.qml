@@ -6,6 +6,7 @@ import QtQuick.Layouts
 import QtQuick.Dialogs
 import Qt.labs.qmlmodels
 
+import Texts 0.1
 import Controls 0.1
 import Themes 0.1
 
@@ -14,6 +15,7 @@ Window {
     height: 800
     visible: true
     title: qsTr("Excel Parser")
+    color: ColorThemes.background
 
     QtObject {
         id: internal
@@ -34,6 +36,10 @@ Window {
                 default: return "";
             }
         }
+
+        function getWindowsPath(path) {
+            return path.toString().slice(8);
+        }
     }
 
     ColumnLayout {
@@ -48,217 +54,223 @@ Window {
 
             ColumnLayout {
                 width: Math.max(implicitWidth, scrollView.availableWidth)
-                spacing: 10
+                spacing: 24
 
-                Text {
-                    text: qsTr("1. Выберите нужный Excel файл")
-                    font.family: "Segoe UI"
-                    color: "#7a7a7a"
-                    font.bold: true
-                    font.pixelSize: 20
-                }
+                ColumnLayout {
+                    spacing: 20
 
-                CustomPathHolder {
-                    id: excelFilePathHolder
-                    Layout.fillWidth: true
-                    Layout.topMargin: 6
-                    Layout.bottomMargin: 6
-                    Layout.rightMargin: 10
+                    MediumText {
+                        text: qsTr("1. Выберите нужный Excel файл")
+                        textSize: 24
+                        wrapMode: Text.WordWrap
+                    }
 
-                    onBrowseClicked: fileDialog.open();
-                }
+                    CustomPathHolder {
+                        id: excelFilePathHolder
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 48
+                        onBrowseClicked: fileDialog.open();
+                    }
 
-                FileDialog {
-                    id: fileDialog
-                    nameFilters: ["Файлы Excel (*.xlsx)"]
-                    currentFolder: StandardPaths.writableLocation(StandardPaths.DownloadLocation)
-                    fileMode: FileDialog.OpenFile
-                    onAccepted: {
-                        const filename = selectedFile.toString().slice(8);
-                        excelFilePathHolder.text = filename;
-                        sheetsModel.updateFromFile(filename);
+                    FileDialog {
+                        id: fileDialog
+                        nameFilters: ["Файлы Excel (*.xlsx)"]
+                        currentFolder: StandardPaths.writableLocation(StandardPaths.DownloadLocation)
+                        fileMode: FileDialog.OpenFile
+                        onAccepted: {
+                            const filename = selectedFile.toString().slice(8);
+                            excelFilePathHolder.text = filename;
+                            sheetsModel.updateFromFile(filename);
+                        }
                     }
                 }
 
-                Text {
-                    text: qsTr("2. Выберите нужный лист")
-                    font.family: "Segoe UI"
-                    color: "#7a7a7a"
-                    font.bold: true
-                    font.pixelSize: 20
-                }
+                ColumnLayout {
+                    spacing: 20
 
-                RowLayout {
-                    spacing: 10
-
-                    CustomComboBox {
-                        id: sheetName
-                        placeholderText: qsTr("Выберите лист")
-                        model: sheetsModel
-                        onActivated: columnsModel.updateFromExcelSheet(fileDialog.selectedFile.toString().slice(8), sheetName.currentText)
-                    }
-                }
-
-                Text {
-                    text: qsTr("3. Выберите действие для каждой из колонок")
-                    font.family: "Segoe UI"
-                    color: "#7a7a7a"
-                    font.bold: true
-                    font.pixelSize: 20
-                }
-
-                GridLayout {
-                    id: sheetColumnsLayout
-                    columns: 3
-                    uniformCellWidths: true
-
-                    Dialog {
-                        id: errorDialog
-                        modal: true
-                        title: "Ошибка"
-
-                        standardButtons: Dialog.Ok
+                    MediumText {
+                        text: qsTr("2. Выберите нужный лист")
+                        textSize: 24
+                        wrapMode: Text.WordWrap
                     }
 
-                    Repeater {
-                        id: columnsActions
-                        model: columnsModel
-                        delegate: RowLayout {
-                            id: columnDelegate
-                            spacing: 10
+                    RowLayout {
+                        spacing: 10
 
-                            property int currentIndex: index
+                        ButtonGroup {
+                            id: themeRG
+                            exclusive: true
+                        }
 
-                            Text {
-                                text: model.text
-                                font.family: "Segoe UI"
-                                color: "#7a7a7a"
-                                font.bold: true
-                                font.pixelSize: 16
-                            }
+                        Repeater {
+                            model: sheetsModel
 
-                            ComboBox {
-                                id: actionComboBox
-                                property int previousIndex: 1
-                                currentIndex: previousIndex
-                                model: Object.keys(internal.actionTypes).map(key => internal.actionText(internal.actionTypes[key]))
-
-                                onActivated: {
-                                    if (!columnsModel.setColumnAction(columnDelegate.currentIndex, currentIndex)) {
-                                        if (currentIndex === internal.actionTypes.keySource) {
-                                            currentIndex = previousIndex;
-                                            errorDialog.title = qsTr("Источник ключа уже выбран. Выберите другой тип действия для этого столбца.");
-                                            errorDialog.open();
-                                        }
-                                    } else {
-                                        previousIndex = currentIndex;
-                                    }
-                                }
-                                Layout.preferredWidth: 150
+                            CustomRadioButton {
+                                ButtonGroup.group: themeRG
+                                onClicked: columnsModel.updateFromExcelSheet(internal.getWindowsPath(fileDialog.selectedFile), text)
                             }
                         }
                     }
                 }
 
-                Text {
-                    text: qsTr("4. Выберите названия для результирующей колонки и колонки группировки")
-                    font.family: "Segoe UI"
-                    color: "#7a7a7a"
-                    font.bold: true
-                    font.pixelSize: 20
+                ColumnLayout
+                {
+                    spacing: 20
+
+                    MediumText {
+                        text: qsTr("3. Выберите действие для колонок")
+                        textSize: 24
+                        wrapMode: Text.WordWrap
+                    }
+
+                    ColumnLayout {
+                        id: sheetColumnsLayout
+                        spacing: 16
+
+                        Dialog {
+                            id: errorDialog
+                            modal: true
+                            title: "Ошибка"
+
+                            standardButtons: Dialog.Ok
+                        }
+
+                        Repeater {
+                            id: columnsActions
+                            model: columnsModel
+                            delegate: RowLayout {
+                                id: columnDelegate
+                                spacing: 24
+
+                                property int currentIndex: index
+
+                                MediumText {
+                                    text: model.text
+                                    textSize: 20
+                                    Layout.preferredWidth: 200
+                                }
+
+                                CustomComboBox {
+                                    id: actionComboBox
+                                    property int previousIndex: 1
+                                    currentIndex: previousIndex
+                                    model: Object.keys(internal.actionTypes).map(key => internal.actionText(internal.actionTypes[key]))
+
+                                    onActivated: {
+                                        if (!columnsModel.setColumnAction(columnDelegate.currentIndex, currentIndex)) {
+                                            if (currentIndex === internal.actionTypes.keySource) {
+                                                currentIndex = previousIndex;
+                                                errorDialog.title = qsTr("Источник ключа уже выбран. Выберите другой тип действия для этого столбца.");
+                                                errorDialog.open();
+                                            }
+                                        } else {
+                                            previousIndex = currentIndex;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                ColumnLayout
+                {
+                    spacing: 20
+
+                    MediumText {
+                        text: qsTr("4. Выберите названия для колонок")
+                        textSize: 24
+                        wrapMode: Text.WordWrap
+                    }
+
+                    RowLayout
+                    {
+                        spacing: 24
+
+                        ColumnLayout
+                        {
+                            spacing: 8
+
+                            MediumText {
+                                text: qsTr("Группировка:")
+                                textSize: 16
+                            }
+
+                            CustomTextField {
+                                id: groupFieldName
+                                placeholderText: "GROUP"
+                                Layout.preferredWidth:  200
+                                onTextChanged: columnsModel.setGroupingColumnName(text)
+                            }
+                        }
+
+                        ColumnLayout
+                        {
+                            spacing: 8
+
+                            MediumText {
+                                text: qsTr("Результирующая:")
+                                textSize: 16
+                            }
+
+                            CustomTextField {
+                                id: keyFieldName
+                                placeholderText: "KWS_UFID"
+                                Layout.preferredWidth:  200
+                                onTextChanged: columnsModel.setKeyColumnName(text)
+                            }
+                        }
+                    }
+                }
+
+                ColumnLayout
+                {
+                    spacing: 20
+
+                    MediumText {
+                        text: qsTr("5. Выберите результирующую директорию")
+                        textSize: 24
+                        wrapMode: Text.WordWrap
+                    }
+
+                    CustomPathHolder {
+                        id: excelFolderPathHolder
+                        Layout.fillWidth: true
+                        Layout.preferredHeight: 48
+                        onBrowseClicked: folderDialog.open();
+                    }
+
+                    FolderDialog {
+                        id: folderDialog
+                        currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
+                        onAccepted: {
+                            const filename = selectedFolder.toString().slice(8);
+                            excelFolderPathHolder.text = filename;
+                        }
+                    }
                 }
 
                 RowLayout {
-                    spacing: 10
-
-                    Text {
-                        text: qsTr("Группировка: ")
-                        font.family: "Segoe UI"
-                        color: "#7a7a7a"
-                        font.bold: true
-                        font.pixelSize: 16
-                    }
-
-                    TextField {
-                        id: groupFieldName
-                        placeholderText: "GROUP"
-                        onTextChanged: columnsModel.setGroupingColumnName(text)
-                        Layout.preferredWidth: 100
-                    }
-
-                    Text {
-                        text: qsTr("Результирующая: ")
-                        font.family: "Segoe UI"
-                        color: "#7a7a7a"
-                        font.bold: true
-                        font.pixelSize: 16
-                    }
-
-                    TextField {
-                        id: keyFieldName
-                        placeholderText: "KWS_UFID"
-                        onTextChanged: columnsModel.setKeyColumnName(text)
-                        Layout.preferredWidth: 100
-                    }
-                }
-
-
-                Text {
-                    text: qsTr("5. Выберите результирующую директорию")
-                    font.family: "Segoe UI"
-                    color: "#7a7a7a"
-                    font.bold: true
-                    font.pixelSize: 20
-                }
-
-                CustomPathHolder {
-                    id: excelFolderPathHolder
-                    Layout.fillWidth: true
-                    Layout.topMargin: 6
-                    Layout.bottomMargin: 6
-                    Layout.rightMargin: 10
-
-                    onBrowseClicked: folderDialog.open();
-                }
-
-                FolderDialog {
-                    id: folderDialog
-                    currentFolder: StandardPaths.writableLocation(StandardPaths.DocumentsLocation)
-                    onAccepted: {
-                        const filename = selectedFolder.toString().slice(8);
-                        excelFolderPathHolder.text = filename;
-                    }
-                }
-
-                RowLayout {
-                    spacing: 10
-
-                    Text {
-                        text: qsTr("6. Начать парсинг")
-                        font.family: "Segoe UI"
-                        color: "#7a7a7a"
-                        font.bold: true
-                        font.pixelSize: 20
-                    }
+                    spacing: 24
 
                     CustomButton {
-                        text: qsTr("Обработать")
+                        text: qsTr("Начать обработку")
                         onClicked: {
                             if(!columnsModel.verifyColumns()) {
                                 errorDialog.title = "Ошибка. Проверьте ошибки в логе.";
                                 errorDialog.open();
                             } else {
-                                excelParser.parse(fileDialog.selectedFile.toString().slice(8),
-                                                  folderDialog.selectedFolder.toString().slice(8));
+                                excelParser.parseAsync(internal.getWindowsPath(fileDialog.selectedFile),
+                                                       internal.getWindowsPath(folderDialog.selectedFolder));
                             }
                         }
                     }
 
-                    Text {
+                    RegularText {
                         id: openFileText
                         enabled: false
-                        text: enabled? "Открыть файл с результатом" : "Кнопка открытия доступна после завершения обработки"
-                        color: enabled? ColorThemes.main_color : "#777777"
+                        text: enabled? "Открыть файл" : "Доступно после завершения обработки"
+                        color: enabled? ColorThemes.main_color : ColorThemes.tonal
                         font.underline: true
 
                         property string filePath: ""

@@ -1,6 +1,5 @@
 #include <QQmlContext>
 
-#include "../excel/ExcelParser.h"
 #include "./../excel/ExcelHelper.h"
 #include "SheetColumnsModel.h"
 
@@ -26,7 +25,7 @@ void SheetColumnsModel::updateFromExcelSheet(const QString& docPath, const QStri
 bool SheetColumnsModel::setColumnAction(int index, ColumnInfo::ActionType action)
 {
     if (index < 0 || index >= m_columns.size() || (action == ColumnInfo::KeySource && isKeySourceAlreadySet())) {
-        qDebug() << "Invalid index or KeySource already set. Index:" << index << ", Action:" << action;
+        qDebug() << "Невалидный индекс или Источник Ключа уже установлен. Индекс:" << index << ", Действие:" << action;
         return false;
     }
 

@@ -3,7 +3,6 @@
 #include <QString>
 #include <QVector>
 
-#include "../Logger.hpp"
 #include "ExcelHelper.h"
 
 ExcelHelper::ExcelHelper()
@@ -93,6 +92,11 @@ bool ExcelHelper::setColumnHeader(const int index, const ColumnInfo::ActionType&
     return saveDocument();
 }
 
+bool ExcelHelper::autoSizeCoumns()
+{
+    return m_doc->autosizeColumnWidth();
+}
+
 QStringList ExcelHelper::getSheetColumnNames() const
 {
     QStringList columnNames;
@@ -106,7 +110,7 @@ QStringList ExcelHelper::getSheetColumnNames() const
     return m_doc->read(row, col).toString();
 }
 
-bool ExcelHelper::writeCell(int row, int col, const QString& value)
+bool ExcelHelper::writeCell(int row, int col, const QVariant& value)
 {
     if (m_doc && row > 0 && col > 0) {
         return m_doc->write(row, col, value);
@@ -142,7 +146,7 @@ bool ExcelHelper::docExists() const
 bool ExcelHelper::saveDocument() const
 {
     if (m_documentPath.isEmpty()) {
-        qWarning() << "Document path is empty. Cannot save document.";
+        qWarning() << "Путь к документу пустой. Сохранение невозможно.";
         return false;
     }
     return m_doc->saveAs(m_documentPath);

@@ -4,8 +4,6 @@
 #include <QMutex>
 #include <QObject>
 
-#include "model/ColumnInfo.hpp"
-
 class AppCore : public QObject
 {
     Q_OBJECT

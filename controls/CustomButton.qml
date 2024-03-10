@@ -2,6 +2,7 @@ import QtQuick
 import QtQuick.Controls.Basic
 
 import Themes 0.1
+import Texts 0.1
 
 Button {
     id: root
@@ -15,12 +16,11 @@ Button {
     property var buttonDynamicColor : root.down ? ColorThemes.main_color_hover : root.hovered
                                                 ? ColorThemes.main_color_hover : ColorThemes.main_color
 
-    contentItem: Text {
+    contentItem: MediumText {
         id: contentText
         text: root.text
         color: textColor
-        font.weight: Font.Medium
-        font.pixelSize: 14
+        textSize: 15
         horizontalAlignment: textAlignment
         verticalAlignment: Qt.AlignVCenter
         elide: Qt.ElideRight

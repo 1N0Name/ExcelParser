@@ -4,51 +4,49 @@ import QtQuick.Layouts
 import Qt5Compat.GraphicalEffects
 
 import Themes 0.1
+import Texts 0.1
 
 ComboBox {
     id: root
-    textRole: "text"
 
-    property color activeColor: ColorThemes.main_color_hover
-    property color inActiveColor: ColorThemes.main_color
     property string placeholderText: ""
-
     currentIndex: placeholderText === "" ? 0 : -1
     displayText: currentIndex === -1 ? placeholderText : currentText
 
-    property bool isActive: false
-
     delegate: ItemDelegate {
-        width: root.width - 10
+        required property var model
+        required property int index
 
-        property variant modelData: model
+        width: root.width
 
-        contentItem: Text {
-            text: modelData.text
-            color: ColorThemes.white
-            font.weight: Font.Medium
-            font.pixelSize: 14
-            elide: Text.ElideRight
-            verticalAlignment: Text.AlignVCenter
+        contentItem: RowLayout {
+            spacing: 16
+
+            RegularText {
+                text: model[root.textRole]
+                elide: Text.ElideRight
+                verticalAlignment: Text.AlignVCenter
+                Layout.fillWidth: true
+            }
+
+            Image {
+                source: 'qrc:/check.svg'
+                sourceSize: Qt.size(16, 16)
+                visible: root.currentIndex === index ? true : false
+            }
         }
 
-        background: Rectangle {
+        background: RoundRectangle {
             width: parent.width
             height: parent.height
-            color: root.highlightedIndex === index ? root.activeColor : root.inActiveColor
-            radius: 5
+            color: root.highlightedIndex === index ? ColorThemes.light_blue : ColorThemes.background
+            border.width: 1
+            border.color: ColorThemes.border_20
 
-            Rectangle {
-                color: "#00008B"
-                visible: root.highlightedIndex === index ? true : false
-
-                width: 3
-                height: 20
-                radius: 5
-
-                anchors.left: parent.left
-                anchors.leftMargin: 0
-                anchors.verticalCenter: parent.verticalCenter
+            MouseArea {
+                anchors.fill: parent
+                enabled: false
+                cursorShape: Qt.PointingHandCursor
             }
         }
     }
@@ -59,14 +57,12 @@ ComboBox {
         y: (root.availableHeight - height) / 2
 
         source: 'qrc:/down_arrow.svg'
-        sourceSize: Qt.size(12, 12)
+        sourceSize: Qt.size(20, 20)
 
         ColorOverlay {
             anchors.fill: indicatorIcon
             source: indicatorIcon
-
-            color: root.down ? "#DE61619c" : "#e5c1d5"
-
+            color: ColorThemes.black
             antialiasing: true
         }
 
@@ -77,51 +73,53 @@ ComboBox {
         }
     }
 
-    contentItem: Item {
-        anchors.fill: parent
+    contentItem: RegularText {
+        property int horizontalPadding: 16
 
-        Text {
+        anchors.fill: parent
+        text: root.displayText
+        textSize: 15
+        elide: Text.ElideRight
+        verticalAlignment: Text.AlignVCenter
+        leftPadding: horizontalPadding
+        rightPadding: indicatorIcon.width + 2 * horizontalPadding
+    }
+
+    background: RoundRectangle {
+        id: rootBG
+        color: ColorThemes.tonal
+        implicitHeight: 48
+        radius: 12
+        radiusCorners: !root.down ? Qt.AlignLeft | Qt.AlignRight | Qt.AlignTop | Qt.AlignBottom :
+                                    Qt.AlignLeft | Qt.AlignRight | Qt.AlignTop
+        layer.enabled: root.hovered | root.down
+
+        MouseArea {
             anchors.fill: parent
-            leftPadding: 10
-            rightPadding: indicatorIcon.width + leftPadding +10
-            verticalAlignment: Text.AlignVCenter
-            text: root.displayText
-            font.weight: Font.Medium
-            font.pixelSize: 14
-            elide: Text.ElideRight
-            color: ColorThemes.white
+            enabled: false
+            cursorShape: Qt.PointingHandCursor
         }
     }
 
-    background: Rectangle {
-        id: rootBG
-        implicitWidth: 140
-        implicitHeight: 48
-        color: root.down ? root.activeColor : root.inActiveColor
-        radius: 12
-
-        layer.enabled: root.hovered | root.down
-    }
-
     popup: Popup {
-        y: root.height - 1
-        width: root.width
-        implicitHeight: contentItem.implicitHeight + 10
-        padding: 5
+        y: root.implicitHeight
+        width: root.implicitWidth
+        implicitHeight: contentItem.implicitHeight
+        padding: 0
 
         contentItem: ListView {
             implicitHeight: contentHeight
             model: root.popup.visible ? root.delegateModel : null
-            clip: true
             currentIndex: root.highlightedIndex
 
             ScrollIndicator.vertical: ScrollIndicator { }
         }
 
-        background: Rectangle {
-            color: root.inActiveColor
-            radius: 12
+        background: RoundRectangle {
+            color: ColorThemes.background
             clip: true
+            radius: 12
+            radiusCorners: Qt.AlignLeft | Qt.AlignRight | Qt.AlignBottom
         }
 
         onVisibleChanged: visible ? indicatorIcon.rotation = 180 : indicatorIcon.rotation = 0

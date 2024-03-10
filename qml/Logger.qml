@@ -3,14 +3,17 @@ import QtQuick.Controls.Basic
 import QtQuick.Layouts
 
 import com.sgu.logger 1.0
+import Texts 0.1
 import Themes 0.1
 
 Rectangle {
     id: loggerView
+    clip: true
     radius: 12
+    color: ColorThemes.tonal
     border.width: 1
     border.color: ColorThemes.main_color
-    clip: true
+
     property alias model: logListModel
 
     ListModel {
@@ -23,11 +26,8 @@ Rectangle {
         anchors.margins: 5
         model: logListModel
 
-        delegate: Text {
+        delegate: TerminalText {
             text: modelData
-            color: "black"
-            font.family: "Segoe UI"
-            font.pixelSize: 14
             wrapMode: Text.WordWrap
             width: listView.width
         }

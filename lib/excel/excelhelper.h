@@ -27,9 +27,10 @@ public:
 
     // Методы для работы с данными
     bool setColumnHeader(const int index, const ColumnInfo::ActionType& type, const QString& name) const;
+    bool autoSizeCoumns();
     [[nodiscard]] QStringList getSheetColumnNames() const;
     [[nodiscard]] QString readCell(int row, int col) const;
-    bool writeCell(int row, int col, const QString& value);
+    bool writeCell(int row, int col, const QVariant& value);
     [[nodiscard]] XlCell getCell(int row, int col) const;
     [[nodiscard]] int getRowCount() const;
     [[nodiscard]] int getColumnCount() const;
