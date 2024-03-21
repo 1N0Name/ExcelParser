@@ -25,7 +25,7 @@ bool ExcelParser::processExcelFile(const QString& filePath, const QString& folde
 
     // Определяем полный путь для целевого документа
     QString fullPath = folderPath + "/result_" + QDateTime::currentDateTime().toString("yyyy-MM-dd_HH-mm-ss") + ".xlsx";
-    ExcelHelper target(fullPath, QFileInfo(filePath).fileName());
+    ExcelHelper target(fullPath);
 
     // Получаем колонки и производим фильтрацию, исключая игнорируемые
     auto columns = m_columnsModel->getColumns();

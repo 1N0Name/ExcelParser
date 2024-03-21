@@ -49,10 +49,13 @@ Window {
 
         ScrollView {
             id: scrollView
-            Layout.fillHeight: true
             Layout.fillWidth: true
+            Layout.fillHeight: true
+            contentWidth: mainContent.width
+            contentHeight: mainContent.height
 
             ColumnLayout {
+                id: mainContent
                 width: Math.max(implicitWidth, scrollView.availableWidth)
                 spacing: 24
 

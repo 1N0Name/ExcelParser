@@ -43,7 +43,7 @@ qt_add_executable(${EXECUTABLE_NAME}
     ${H_SOURCES}
     ${IMAGE_RESOURCES}
     ${CPP_SOURCES}
-    # ${WIN32_ICON}
+    ${WIN32_ICON}
 )
 
 # Group all source files in the project
