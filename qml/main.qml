@@ -56,7 +56,6 @@ Window {
 
             ColumnLayout {
                 id: mainContent
-                width: Math.max(implicitWidth, scrollView.availableWidth)
                 spacing: 24
 
                 ColumnLayout {
@@ -299,7 +298,7 @@ Window {
             }
         }
 
-        Logger {
+        LoggerView {
             id: logger
             Layout.fillWidth: true
             Layout.preferredHeight: 200
